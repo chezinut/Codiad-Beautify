@@ -4,6 +4,7 @@ Beautify js, json, html, css or php files.
 
 ### Channellog
 
+- 0.5.5 Libraries updated
 - 0.5.0 Adds ability to guess cursor position after beautifying complete file
 - 0.4.0 New settings dialog -> see editor settings
 - 0.4.05 Quick fix for issue #1
