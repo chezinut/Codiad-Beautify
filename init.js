@@ -37,19 +37,12 @@
 			});
 			//Load settings
 			this.load();
-			//Set subscriptions
-			amplify.subscribe('active.onOpen', function(path){
-			if(codiad.editor.getActive() === null)
-			return;
-				var manager = codiad.editor.getActive().commands;
-				manager.addCommand({
-					name: "Beautify",
-					bindKey: {win: "Ctrl-Alt-B", mac: "Command-Alt-B"},
-					exec: function(){
-						_this.beautify();
-					}
-				});
-			});
+//Set subscriptions
+			var bindCommand = function(){
+				_this.bindBeautifyCommand();
+			};
+			amplify.subscribe('active.onOpen', bindCommand);
+			amplify.subscribe('active.onFocus', bindCommand);
 			amplify.subscribe('active.onSave', function(path){
 				path = path || codiad.active.getPath();
 				var ext = _this.getExtension(path);
@@ -84,6 +77,36 @@
 			});
 		},
 		
+		//////////////////////////////////////////////////////////
+		//
+		//  Bind the Beautify hotkey to every live Editor instance.
+		//
+		//  Active files can be restored in the background before any
+		//  Editor instance exists, so codiad.editor.getActive() may
+		//  still be null and instances may appear later on.
+		//
+		//////////////////////////////////////////////////////////
+		bindBeautifyCommand: function() {
+			var _this = this;
+			var addTo = function(editor) {
+				if (! editor || ! editor.commands) return;
+				var manager = editor.commands;
+				if (manager.commands && manager.commands["Beautify"]) return;
+				manager.addCommand({
+					name: "Beautify",
+					bindKey: {win: "Ctrl-Alt-B", mac: "Command-Alt-B"},
+					exec: function(){
+						_this.beautify();
+					}
+				});
+			};
+			var active = codiad.editor.getActive();
+			addTo(active);
+			codiad.editor.forEach(function(editor){
+				if (editor !== active) addTo(editor);
+			});
+		},
+
 		//////////////////////////////////////////////////////////
 		//
 		//  Show settings dialog
@@ -267,6 +290,7 @@
 			var settings = this.settings.beautify;
 			var path	= codiad.active.getPath();
 			var editor  = codiad.editor.getActive();
+			if (! editor) return;
 			var session = editor.getSession();
 			var selText = codiad.editor.getSelectedText();
 			var range   = editor.selection.getRange();
